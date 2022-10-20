@@ -154,6 +154,7 @@
           - docker-ce-cli
           - containerd.io
           - docker-compose-plugin
+          - bash-completion
         state: present
       register: docker_installed
       become: true
@@ -196,7 +197,7 @@
 
     - name: Create .docker/cli-plugins directory
       ansible.builtin.file:
-        path: /home/{{ install_user }}/.docker/cli-plugins
+        path: "/home/{{ install_user }}/.docker/cli-plugins"
         state: directory
         mode: 0755
       become: true
@@ -222,7 +223,7 @@
       community.general.git_config:
         name: user.name
         scope: global
-        value: {{ git_user }}
+        value: "{{ git_user }}"
       register: git_config_name
       changed_when: git_config_name is changed
 
@@ -230,7 +231,7 @@
       community.general.git_config:
         name: user.email
         scope: global
-        value: {{ git_email }}
+        value: "{{ git_email }}"
       register: git_config_email
       changed_when: git_config_email is changed
 
@@ -241,7 +242,26 @@
         value: "code --wait"
       register: git_config_editor
       changed_when: git_config_editor is changed
+
+
     # Install runtimes and sdks
+
+    - name: See if Nodesource list contains Node 16.x
+      ansible.builtin.command: grep -c 'https://deb.nodesource.com/node_16.x' /etc/apt/sources.list.d/nodesource.list; true # grep returns 1 if no match
+      register: nodesource_list_contains_node_16
+      # if found return code will be non zero so ignore errors
+      ignore_errors: true
+      become: true
+
+    - name: Add  Node.js 16.x apt repository if not found
+      ansible.builtin.apt_repository:
+        repo: deb https://deb.nodesource.com/node_16.x focal main
+        state: present
+      when: 
+        - nodesource_list_contains_node_16.stdout == "0"
+      become: true
+
+
     - name: Install nodejs
       ansible.builtin.apt:
         name: nodejs
@@ -358,6 +378,23 @@
       register: gnome_stuff_installed
       become: true
       changed_when: gnome_stuff_installed is changed
+
+    - name: Download Azure Data Studio
+      ansible.builtin.get_url:
+        url: https://go.microsoft.com/fwlink/?linkid=2112886
+        dest: /tmp/azuredatastudio.deb
+        mode: 0755
+      register: azure_data_studio_downloaded
+      become: true
+      changed_when: azure_data_studio_downloaded is changed
+
+    - name: Install Azure Data Studio
+      ansible.builtin.apt:
+        deb: /tmp/azuredatastudio.deb
+        state: present
+      register: azure_data_studio_installed
+      become: true
+      changed_when: azure_data_studio_installed is changed
 
     - name: Start Jetbrains toolbox
       ansible.builtin.command:
