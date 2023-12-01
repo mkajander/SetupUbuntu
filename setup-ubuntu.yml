@@ -286,14 +286,6 @@
       become: true
       changed_when: pnpm_installed is changed
 
-    - name: Install dotnet 6 sdk
-      ansible.builtin.apt:
-        name: dotnet6
-        state: present
-      register: dotnet_sdk6_installed
-      become: true
-      changed_when: dotnet_sdk6_installed is changed
-
     - name: Install dotnet 7 sdk
       ansible.builtin.apt:
         name: dotnet7
@@ -301,6 +293,14 @@
       register: dotnet_sdk7_installed
       become: true
       changed_when: dotnet_sdk7_installed is changed
+
+    - name: Install dotnet 8 sdk
+      ansible.builtin.apt:
+        name: dotnet8
+        state: present
+      register: dotnet_sdk8_installed
+      become: true
+      changed_when: dotnet_sdk8_installed is changed
 
     - name: Install Java 11
       ansible.builtin.apt:
