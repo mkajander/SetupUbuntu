@@ -1,0 +1,39 @@
+- name: Install git
+  ansible.builtin.apt:
+    name: git
+    state: present
+  register: git_installed
+  become: true
+  changed_when: git_installed is changed
+
+- name: Configure git with my name
+  community.general.git_config:
+    name: user.name
+    scope: global
+    value: "{{ git_user }}"
+  register: git_config_name
+  changed_when: git_config_name is changed
+
+- name: Configure git with my email
+  community.general.git_config:
+    name: user.email
+    scope: global
+    value: "{{ git_email }}"
+  register: git_config_email
+  changed_when: git_config_email is changed
+
+- name: Configure git to use vscode as default editor
+  community.general.git_config:
+    name: core.editor
+    scope: global
+    value: "code --wait"
+  register: git_config_editor
+  changed_when: git_config_editor is changed
+
+- name: Set default branch name to main
+  community.general.git_config:
+    name: init.defaultBranch
+    scope: global
+    value: main
+  register: git_config_default_branch
+  changed_when: git_config_default_branch is changed

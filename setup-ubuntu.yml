@@ -9,116 +9,12 @@
 
   tasks:
   # Install tooling
-    - name: Install git
+    - name: Update apt cache
       ansible.builtin.apt:
-        name: git
-        state: present
-      register: git_installed
+        update_cache: true
+        cache_valid_time: 3600
       become: true
-      changed_when: git_installed is changed
-
-    - name: Install VSCode
-      community.general.snap:
-        name: code
-        state: present
-      register: vscode_installed
-      become: true
-      changed_when: vscode_installed is changed
-
-    - name: Install zsh
-      ansible.builtin.apt:
-        name: zsh
-        state: present
-      register: zsh_installed
-      become: true
-      changed_when: zsh_installed is changed
-
-    - name: Get oh my zsh
-      ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-        dest: /tmp/install.sh
-        mode: 0755
-      register: oh_my_zsh_downloaded
-      become: true
-      changed_when: oh_my_zsh_downloaded is changed
-
-    - name: Install oh my zsh
-      ansible.builtin.command: /tmp/install.sh
-      register: oh_my_zsh_installed
-      become: true
-      ignore_errors: true # This is a hack to ignore the error that oh-my-zsh throws when it's already installed
-      changed_when: oh_my_zsh_installed is changed
-
-    - name: Install terminator
-      ansible.builtin.apt:
-        name: terminator
-        state: present
-      register: terminator_installed
-      become: true
-      changed_when: terminator_installed is changed
-
-    - name: Set terminator as default terminal
-      ansible.builtin.command: gsettings set org.gnome.desktop.default-applications.terminal exec terminator
-      register: terminator_set_as_default
-      changed_when: terminator_set_as_default is changed
-
-    - name: Get oh my zsh config
-      ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/templates/zshrc.zsh-template
-        dest: /home/{{ install_user }}/.zshrc
-        mode: 0644
-      register: oh_my_zsh_config_downloaded
-      become: true
-      changed_when: oh_my_zsh_config_downloaded is changed
-
-    - name: Install python3-pip
-      ansible.builtin.apt:
-        name: python3-pip
-        state: present
-      register: pip_installed
-      become: true
-      changed_when: pip_installed is changed
-
-    - name: Install ansible-lint
-      ansible.builtin.pip:
-        name: ansible-lint
-        state: present
-      register: ansible_lint_installed
-      changed_when: ansible_lint_installed is changed
-
-    - name: Install general deps
-      ansible.builtin.apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - gnupg
-          - lsb-release
-          - software-properties-common
-          - virtualenv
-          - python3-setuptools
-          - libfuse2
-        state: present
-      register: docker_preinstall
-      become: true
-      changed_when: docker_preinstall is changed
-
-    - name: Add Docker GPG apt Key
-      ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-      register: docker_gpg_key_added
-      become: true
-      changed_when: docker_gpg_key_added is changed
-
-    - name: Add Docker Repository
-      ansible.builtin.apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
-        state: present
-      register: docker_repo_added
-      become: true
-      changed_when: docker_repo_added is changed
-
+      
     - name: Add Google Cloud public signing key
       ansible.builtin.apt_key:
         url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
@@ -147,19 +43,6 @@
       become: true
       changed_when: docker_cache_policy is changed
 
-    - name: Install Docker
-      ansible.builtin.apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-compose-plugin
-          - bash-completion
-        state: present
-      register: docker_installed
-      become: true
-      changed_when: docker_installed is changed
-
     - name: Install kubectl
       ansible.builtin.apt:
         name: kubectl
@@ -174,74 +57,6 @@
         state: present
       become: true
 
-    - name: Add user to docker group
-      ansible.builtin.user:
-        name: "{{ install_user }}"
-        groups: docker
-        append: true
-      become: true
-
-    - name: Start and enable docker service
-      ansible.builtin.service:
-        name: docker.service
-        state: started
-        enabled: true
-      become: true
-
-    - name: Start and enable containerd service
-      ansible.builtin.service:
-        name: containerd.service
-        state: started
-        enabled: true
-      become: true
-
-    - name: Create .docker/cli-plugins directory
-      ansible.builtin.file:
-        path: "/home/{{ install_user }}/.docker/cli-plugins"
-        state: directory
-        mode: 0755
-      become: true
-
-    - name: Download docker-compose as a plugin use with docker compose
-      ansible.builtin.get_url:
-        url: "https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-linux-x86_64"
-        dest: "/home/{{ install_user }}/.docker/cli-plugins/docker-compose"
-        mode: 0755
-      register: docker_compose_downloaded
-      become: true
-
-    - name: Install docker-compose with pip for DockStation to use
-      ansible.builtin.pip:
-        name: docker-compose
-        state: present
-      register: docker_compose_installed
-      become: true
-      changed_when: docker_compose_installed is changed
-
-    # Setup git
-    - name: Configure git with my name and email
-      community.general.git_config:
-        name: user.name
-        scope: global
-        value: "{{ git_user }}"
-      register: git_config_name
-      changed_when: git_config_name is changed
-
-    - name: Configure git with my email
-      community.general.git_config:
-        name: user.email
-        scope: global
-        value: "{{ git_email }}"
-      register: git_config_email
-      changed_when: git_config_email is changed
-
-    - name: Configure git to use vscode as default editor
-      community.general.git_config:
-        name: core.editor
-        scope: global
-        value: "code --wait"
-      register: git_config_editor
-      changed_when: git_config_editor is changed
 
 
     # Install runtimes and sdks

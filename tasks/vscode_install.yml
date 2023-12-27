@@ -1,0 +1,7 @@
+- name: Install VSCode
+  community.general.snap:
+    name: code
+    state: present
+  register: vscode_installed
+  become: true
+  changed_when: vscode_installed is changed

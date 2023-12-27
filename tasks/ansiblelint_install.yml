@@ -1,0 +1,6 @@
+- name: Install ansible-lint
+  ansible.builtin.pip:
+    name: ansible-lint
+    state: present
+  register: ansible_lint_installed
+  changed_when: ansible_lint_installed is changed
