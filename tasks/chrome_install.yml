@@ -16,7 +16,7 @@
 - name: Add Google Chrome repository
   ansible.builtin.lineinfile:
     path: /etc/apt/sources.list.d/google-chrome.list
-    line: "deb [arch={{ ansible_architecture }} signed-by=/usr/share/keyrings/chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main"
+    line: "deb [arch=amd64 signed-by=/usr/share/keyrings/chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main"
     create: true
   become: true
   when: chrome_gpg_key_added.changed
