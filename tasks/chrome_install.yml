@@ -1,0 +1,30 @@
+---
+- name: Check if Google Chrome GPG key is already in keyring
+  ansible.builtin.stat:
+    path: /usr/share/keyrings/chrome-keyring.gpg
+  register: chrome_gpg_key_file
+  become: true
+
+- name: Add Google Chrome GPG key
+  ansible.builtin.shell:
+    cmd: wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | gpg --dearmor -o /usr/share/keyrings/chrome-keyring.gpg
+  when: not chrome_gpg_key_file.stat.exists
+  become: true
+  register: chrome_gpg_key_added
+  changed_when: chrome_gpg_key_added.rc == 0 and not chrome_gpg_key_file.stat.exists
+
+- name: Add Google Chrome repository
+  ansible.builtin.lineinfile:
+    path: /etc/apt/sources.list.d/google-chrome.list
+    line: deb [arch=amd64 signed-by=/usr/share/keyrings/chrome-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main
+    create: true
+    mode: "0644"
+  become: true
+  when: chrome_gpg_key_added.changed
+
+- name: Install Google Chrome
+  ansible.builtin.apt:
+    name: google-chrome-stable
+    state: present
+    update_cache: true
+  become: true

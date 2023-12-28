@@ -1,0 +1,32 @@
+---
+- name: Install zsh
+  ansible.builtin.apt:
+    name: zsh
+    state: present
+  register: zsh_installed
+  become: true
+
+- name: Get oh my zsh
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
+    dest: /tmp/install.sh
+    mode: "0755"
+  register: oh_my_zsh_downloaded
+  become: true
+
+- name: Install oh my zsh
+  ansible.builtin.command:
+    cmd: /tmp/install.sh
+    creates: /home/{{ install_user }}/.oh-my-zsh/oh-my-zsh.sh
+  register: oh_my_zsh_installed
+  become: true
+  ignore_errors: true
+  when: oh_my_zsh_downloaded.changed
+  changed_when: oh_my_zsh_installed.rc == 0
+
+- name: Change default shell to zsh
+  ansible.builtin.user:
+    name: "{{ install_user }}"
+    shell: /usr/bin/zsh
+  register: default_shell_changed
+  become: true

@@ -1,0 +1,14 @@
+---
+- name: Install Java 11
+  ansible.builtin.apt:
+    name: openjdk-11-jdk
+    state: present
+  register: java11_installed
+  become: true
+
+- name: Install Java runtime
+  ansible.builtin.apt:
+    name: openjdk-11-jre
+    state: present
+  register: java_runtime_installed
+  become: true

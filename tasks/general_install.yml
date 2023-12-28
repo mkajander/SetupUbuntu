@@ -1,0 +1,12 @@
+---
+- name: Install Postman, Discord, Spotify and Slack
+  community.general.snap:
+    name:
+      - postman
+      - discord
+      - spotify
+      - slack
+    state: present
+  register: snap_apps_installed
+  become: true
+  changed_when: snap_apps_installed is changed

@@ -1,413 +1,52 @@
 ---
-
 - name: Setup my dev environment on Ubuntu
   hosts: localhost
   gather_facts: true
   vars_files:
     - ./vars/user_vars.yml
 
-
   tasks:
   # Install tooling
-    - name: Install git
-      ansible.builtin.apt:
-        name: git
-        state: present
-      register: git_installed
-      become: true
-      changed_when: git_installed is changed
-
-    - name: Install VSCode
-      community.general.snap:
-        name: code
-        state: present
-      register: vscode_installed
-      become: true
-      changed_when: vscode_installed is changed
-
-    - name: Install zsh
-      ansible.builtin.apt:
-        name: zsh
-        state: present
-      register: zsh_installed
-      become: true
-      changed_when: zsh_installed is changed
-
-    - name: Get oh my zsh
-      ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-        dest: /tmp/install.sh
-        mode: 0755
-      register: oh_my_zsh_downloaded
-      become: true
-      changed_when: oh_my_zsh_downloaded is changed
-
-    - name: Install oh my zsh
-      ansible.builtin.command: /tmp/install.sh
-      register: oh_my_zsh_installed
-      become: true
-      ignore_errors: true # This is a hack to ignore the error that oh-my-zsh throws when it's already installed
-      changed_when: oh_my_zsh_installed is changed
-
-    - name: Install terminator
-      ansible.builtin.apt:
-        name: terminator
-        state: present
-      register: terminator_installed
-      become: true
-      changed_when: terminator_installed is changed
-
-    - name: Set terminator as default terminal
-      ansible.builtin.command: gsettings set org.gnome.desktop.default-applications.terminal exec terminator
-      register: terminator_set_as_default
-      changed_when: terminator_set_as_default is changed
-
-    - name: Get oh my zsh config
-      ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/templates/zshrc.zsh-template
-        dest: /home/{{ install_user }}/.zshrc
-        mode: 0644
-      register: oh_my_zsh_config_downloaded
-      become: true
-      changed_when: oh_my_zsh_config_downloaded is changed
-
-    - name: Install python3-pip
-      ansible.builtin.apt:
-        name: python3-pip
-        state: present
-      register: pip_installed
-      become: true
-      changed_when: pip_installed is changed
-
-    - name: Install ansible-lint
-      ansible.builtin.pip:
-        name: ansible-lint
-        state: present
-      register: ansible_lint_installed
-      changed_when: ansible_lint_installed is changed
-
-    - name: Install general deps
-      ansible.builtin.apt:
-        name:
-          - apt-transport-https
-          - ca-certificates
-          - curl
-          - gnupg
-          - lsb-release
-          - software-properties-common
-          - virtualenv
-          - python3-setuptools
-          - libfuse2
-        state: present
-      register: docker_preinstall
-      become: true
-      changed_when: docker_preinstall is changed
-
-    - name: Add Docker GPG apt Key
-      ansible.builtin.apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-      register: docker_gpg_key_added
-      become: true
-      changed_when: docker_gpg_key_added is changed
-
-    - name: Add Docker Repository
-      ansible.builtin.apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable
-        state: present
-      register: docker_repo_added
-      become: true
-      changed_when: docker_repo_added is changed
-
-    - name: Add Google Cloud public signing key
-      ansible.builtin.apt_key:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-        state: present
-      register: google_cloud_key_added
-      become: true
-      changed_when: google_cloud_key_added is changed
-
-    - name: Add Kubernetes apt repository
-      ansible.builtin.apt_repository:
-        repo: deb http://apt.kubernetes.io/ kubernetes-xenial main
-        state: present
-      register: kubernetes_repo_added
-      become: true
-      changed_when: kubernetes_repo_added is changed
-
-    - name: Update apt cache
+    - name: Update APT cache
       ansible.builtin.apt:
         update_cache: true
-        cache_valid_time: 3600
       become: true
 
-    - name: Apt-cache policy docker-ce
-      ansible.builtin.command: apt-cache policy docker-ce
-      register: docker_cache_policy
-      become: true
-      changed_when: docker_cache_policy is changed
+    - name: Install general deps
+      ansible.builtin.include_tasks: tasks/deps_install.yml
 
-    - name: Install Docker
-      ansible.builtin.apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-compose-plugin
-          - bash-completion
-        state: present
-      register: docker_installed
-      become: true
-      changed_when: docker_installed is changed
+    - name: Install ansible-lint
+      ansible.builtin.include_tasks: tasks/ansiblelint_install.yml
+
+    - name: Setup git
+      ansible.builtin.include_tasks: tasks/git_setup.yml
+
+    - name: Install zsh
+      ansible.builtin.include_tasks: tasks/zsh_install.yml
+
+    - name: Install pip3
+      ansible.builtin.include_tasks: tasks/pip3_install.yml
+
+    - name: Install docker
+      ansible.builtin.include_tasks: tasks/docker_install.yml
 
     - name: Install kubectl
-      ansible.builtin.apt:
-        name: kubectl
-        state: present
-      register: kubectl_installed
-      become: true
-      changed_when: kubectl_installed is changed
+      ansible.builtin.include_tasks: tasks/kubectl_install.yml
 
-    - name: Create docker group
-      ansible.builtin.group:
-        name: docker
-        state: present
-      become: true
+    - name: Install minikube
+      ansible.builtin.include_tasks: tasks/minikube_install.yml
 
-    - name: Add user to docker group
-      ansible.builtin.user:
-        name: "{{ install_user }}"
-        groups: docker
-        append: true
-      become: true
+    - name: Install helm
+      ansible.builtin.include_tasks: tasks/helm_install.yml
 
-    - name: Start and enable docker service
-      ansible.builtin.service:
-        name: docker.service
-        state: started
-        enabled: true
-      become: true
+    - name: Install terraform
+      ansible.builtin.include_tasks: tasks/terraform_install.yml
 
-    - name: Start and enable containerd service
-      ansible.builtin.service:
-        name: containerd.service
-        state: started
-        enabled: true
-      become: true
+    - name: Install azure cli
+      ansible.builtin.include_tasks: tasks/azure_cli_install.yml
 
-    - name: Create .docker/cli-plugins directory
-      ansible.builtin.file:
-        path: "/home/{{ install_user }}/.docker/cli-plugins"
-        state: directory
-        mode: 0755
-      become: true
+    - name: Install chrome
+      ansible.builtin.include_tasks: tasks/chrome_install.yml
 
-    - name: Download docker-compose as a plugin use with docker compose
-      ansible.builtin.get_url:
-        url: "https://github.com/docker/compose/releases/download/v2.3.3/docker-compose-linux-x86_64"
-        dest: "/home/{{ install_user }}/.docker/cli-plugins/docker-compose"
-        mode: 0755
-      register: docker_compose_downloaded
-      become: true
-
-    - name: Install docker-compose with pip for DockStation to use
-      ansible.builtin.pip:
-        name: docker-compose
-        state: present
-      register: docker_compose_installed
-      become: true
-      changed_when: docker_compose_installed is changed
-
-    # Setup git
-    - name: Configure git with my name and email
-      community.general.git_config:
-        name: user.name
-        scope: global
-        value: "{{ git_user }}"
-      register: git_config_name
-      changed_when: git_config_name is changed
-
-    - name: Configure git with my email
-      community.general.git_config:
-        name: user.email
-        scope: global
-        value: "{{ git_email }}"
-      register: git_config_email
-      changed_when: git_config_email is changed
-
-    - name: Configure git to use vscode as default editor
-      community.general.git_config:
-        name: core.editor
-        scope: global
-        value: "code --wait"
-      register: git_config_editor
-      changed_when: git_config_editor is changed
-
-
-    # Install runtimes and sdks
-
-    - name: See if Nodesource list contains Node 16.x
-      ansible.builtin.command: grep -c 'https://deb.nodesource.com/node_16.x' /etc/apt/sources.list.d/nodesource.list; true # grep returns 1 if no match
-      register: nodesource_list_contains_node_16
-      # if found return code will be non zero so ignore errors
-      ignore_errors: true
-      become: true
-
-    - name: Add  Node.js 16.x apt repository if not found
-      ansible.builtin.apt_repository:
-        repo: deb https://deb.nodesource.com/node_16.x focal main
-        state: present
-      when: 
-        - nodesource_list_contains_node_16.stdout == "0"
-      become: true
-
-
-    - name: Install nodejs
-      ansible.builtin.apt:
-        name: nodejs
-        state: present
-      register: nodejs_installed
-      become: true
-      changed_when: nodejs_installed is changed
-
-    - name: Install npm
-      ansible.builtin.apt:
-        name: npm
-        state: present
-      register: npm_installed
-      become: true
-      changed_when: npm_installed is changed
-
-    - name: Install pnpm
-      ansible.builtin.npm:
-        name: pnpm
-        global: true
-      register: pnpm_installed
-      become: true
-      changed_when: pnpm_installed is changed
-
-    - name: Install dotnet 7 sdk
-      ansible.builtin.apt:
-        name: dotnet7
-        state: present
-      register: dotnet_sdk7_installed
-      become: true
-      changed_when: dotnet_sdk7_installed is changed
-
-    - name: Install dotnet 8 sdk
-      ansible.builtin.apt:
-        name: dotnet8
-        state: present
-      register: dotnet_sdk8_installed
-      become: true
-      changed_when: dotnet_sdk8_installed is changed
-
-    - name: Install Java 11
-      ansible.builtin.apt:
-        name: openjdk-11-jdk
-        state: present
-      register: java11_installed
-      become: true
-      changed_when: java11_installed is changed
-
-    - name: Install Java runtime
-      ansible.builtin.apt:
-        name: openjdk-11-jre
-        state: present
-      register: java_runtime_installed
-      become: true
-      changed_when: java_runtime_installed is changed
-
-    # Install applications
-
-    - name: Add Chrome key
-      ansible.builtin.apt_key:
-        url: https://dl.google.com/linux/linux_signing_key.pub
-        state: present
-      become: true
-      register: chrome_key_installed
-      changed_when: chrome_key_installed is changed
-
-    - name: Add Chrome repo
-      ansible.builtin.apt_repository:
-        repo: deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main
-        state: present
-      register: chrome_repo_added
-      become: true
-      changed_when: chrome_repo_added is changed
-
-    - name: Install Chrome
-      ansible.builtin.apt:
-        name: google-chrome-stable
-        state: present
-      register: chrome_installed
-      become: true
-      changed_when: chrome_installed is changed
-
-    - name: Get install Jetbrains toolbox script
-      ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/nagygergo/jetbrains-toolbox-install/master/jetbrains-toolbox.sh
-        dest: /tmp/jetbrains-toolbox.sh
-        mode: 0755
-      register: jetbrains_toolbox_script
-      become: true
-      changed_when: jetbrains_toolbox_script is changed
-
-
-    - name: Install Jetbrains toolbox from the script
-      ansible.builtin.command:
-        cmd: /tmp/jetbrains-toolbox.sh
-        creates: /opt/jetbrains-toolbox
-      register: jetbrains_toolbox_installed
-      become: true
-      changed_when: jetbrains_toolbox_installed is changed
-
-    - name: Install Postman, Discord, Spotify and Slack
-      community.general.snap:
-        name:
-          - postman
-          - discord
-          - spotify
-          - slack
-        state: present
-      register: snap_apps_installed
-      become: true
-      changed_when: snap_apps_installed is changed
-
-    # Setup visuals, themes and icons
-
-    - name: Install gnome-stuff
-      ansible.builtin.apt:
-        name:
-          - gnome-tweaks
-          - gnome-shell-extensions
-          - chrome-gnome-shell
-        state: present
-      register: gnome_stuff_installed
-      become: true
-      changed_when: gnome_stuff_installed is changed
-
-    - name: Download Azure Data Studio
-      ansible.builtin.get_url:
-        url: https://go.microsoft.com/fwlink/?linkid=2112886
-        dest: /tmp/azuredatastudio.deb
-        mode: 0755
-      register: azure_data_studio_downloaded
-      become: true
-      changed_when: azure_data_studio_downloaded is changed
-
-    - name: Install Azure Data Studio
-      ansible.builtin.apt:
-        deb: /tmp/azuredatastudio.deb
-        state: present
-      register: azure_data_studio_installed
-      become: true
-      changed_when: azure_data_studio_installed is changed
-
-    - name: Start Jetbrains toolbox
-      ansible.builtin.command:
-        cmd: /opt/jetbrains-toolbox/jetbrains-toolbox
-        creates: /home/mikael/.local/share/JetBrains/Toolbox
-      register: jetbrains_toolbox_started
-      become: true
-      changed_when: jetbrains_toolbox_started is changed
+    - name: Install vscode
+      ansible.builtin.include_tasks: tasks/vscode_install.yml

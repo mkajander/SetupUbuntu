@@ -1,0 +1,70 @@
+---
+- name: Check installed .NET SDKs
+  ansible.builtin.command: dotnet --list-sdks
+  register: dotnet_sdks
+  ignore_errors: true
+  changed_when: false
+
+- name: Set fact for .NET SDK installation requirement
+  ansible.builtin.set_fact:
+    dotnet_install_required: "'7.0' not in dotnet_sdks.stdout or '8.0' not in dotnet_sdks.stdout"
+
+- name: Install .NET Core dependencies
+  ansible.builtin.apt:
+    name:
+      - libc6
+      - libgcc1
+      - libgcc-s1
+      - libgssapi-krb5-2
+      - libicu70
+      - liblttng-ust1
+      - libssl3
+      - libstdc++6
+      - libunwind8
+      - zlib1g
+    state: present
+    update_cache: true
+  become: true
+  when: dotnet_install_required
+
+- name: Download .NET Core install script
+  ansible.builtin.get_url:
+    url: https://dot.net/v1/dotnet-install.sh
+    dest: /tmp/dotnet-install.sh
+    mode: "0755"
+  when: dotnet_install_required
+
+- name: Install .NET SDK 8.0
+  ansible.builtin.command: /tmp/dotnet-install.sh --channel 8.0
+  become_user: "{{ install_user }}"
+  register: dotnet_sdk_8_0
+  when: dotnet_install_required
+  changed_when: dotnet_sdk_8_0.stdout != ''
+
+- name: Install .NET SDK 7.0
+  ansible.builtin.command: /tmp/dotnet-install.sh --channel 7.0
+  become_user: "{{ install_user }}"
+  register: dotnet_sdk_7_0
+  when: dotnet_install_required
+  changed_when: dotnet_sdk_7_0.stdout != ''
+
+- name: Remove .NET installation script
+  ansible.builtin.file:
+    path: /tmp/dotnet-install.sh
+    state: absent
+
+- name: Set DOTNET_ROOT in zsh profile
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: export DOTNET_ROOT=$HOME/.dotnet
+    mode: "0644"
+  become_user: "{{ install_user }}"
+  when: dotnet_install_required
+
+- name: Update PATH in zsh profile
+  ansible.builtin.lineinfile:
+    path: "{{ ansible_env.HOME }}/.zshrc"
+    line: export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+    mode: "0644"
+  become_user: "{{ install_user }}"
+  when: dotnet_install_required
