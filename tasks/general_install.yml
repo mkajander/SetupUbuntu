@@ -10,3 +10,16 @@
   register: snap_apps_installed
   become: true
   changed_when: snap_apps_installed is changed
+
+- name: Install terminator
+  ansible.builtin.apt:
+    name: terminator
+    state: present
+  register: terminator_installed
+  become: true
+  changed_when: terminator_installed is changed
+
+- name: Set terminator as default terminal
+  ansible.builtin.command: gsettings set org.gnome.desktop.default-applications.terminal exec terminator
+  register: terminator_set_as_default
+  changed_when: terminator_set_as_default is changed

@@ -9,24 +9,23 @@
 - name: Get oh my zsh
   ansible.builtin.get_url:
     url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh
-    dest: /tmp/install.sh
+    dest: /tmp/ohmyzsh_install.sh
     mode: "0755"
   register: oh_my_zsh_downloaded
   become: true
 
 - name: Install oh my zsh
-  ansible.builtin.command:
-    cmd: /tmp/install.sh
-    creates: /home/{{ install_user }}/.oh-my-zsh/oh-my-zsh.sh
+  ansible.builtin.command: /tmp/ohmyzsh_install.sh
   register: oh_my_zsh_installed
   become: true
-  ignore_errors: true
-  when: oh_my_zsh_downloaded.changed
-  changed_when: oh_my_zsh_installed.rc == 0
+  ignore_errors: true # This is a hack to ignore the error that oh-my-zsh throws when it's already installed
+  changed_when: oh_my_zsh_installed is changed
 
-- name: Change default shell to zsh
-  ansible.builtin.user:
-    name: "{{ install_user }}"
-    shell: /usr/bin/zsh
-  register: default_shell_changed
+- name: Get oh my zsh config
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/templates/zshrc.zsh-template
+    dest: /home/{{ install_user }}/.zshrc
+    mode: 0644
+  register: oh_my_zsh_config_downloaded
   become: true
+  changed_when: oh_my_zsh_config_downloaded is changed

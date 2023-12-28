@@ -6,17 +6,8 @@
   become: true
 
 - name: Get install JetBrains Toolbox script
-  ansible.builtin.get_url:
-    url: https://raw.githubusercontent.com/nagygergo/jetbrains-toolbox-install/master/jetbrains-toolbox.sh
-    dest: /tmp/jetbrains-toolbox.sh
-    mode: "0755"
-  when: not toolbox_installed.stat.exists
-  become: true
-
-- name: Install JetBrains Toolbox from the script
-  ansible.builtin.command:
-    cmd: /tmp/jetbrains-toolbox.sh
-    creates: /opt/jetbrains-toolbox
+  ansible.builtin.shell:
+    cmd: curl -fsSL https://raw.githubusercontent.com/nagygergo/jetbrains-toolbox-install/master/jetbrains-toolbox.sh | bash
   when: not toolbox_installed.stat.exists
   become: true
 

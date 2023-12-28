@@ -1,0 +1,6 @@
+- name: Install Github CLI
+  ansible.builtin.apt:
+    name: gh
+    state: present
+  register: github_cli_installed
+  become: true
