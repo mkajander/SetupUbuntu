@@ -15,17 +15,20 @@
     - name: Install general deps
       ansible.builtin.include_tasks: tasks/deps_install.yml
 
+    - name: Install pip3
+      ansible.builtin.include_tasks: tasks/pip3_install.yml
+
     - name: Install ansible-lint
       ansible.builtin.include_tasks: tasks/ansiblelint_install.yml
+
+    - name: Install vscode
+      ansible.builtin.include_tasks: tasks/vscode_install.yml
 
     - name: Setup git
       ansible.builtin.include_tasks: tasks/git_setup.yml
 
     - name: Install zsh
       ansible.builtin.include_tasks: tasks/zsh_install.yml
-
-    - name: Install pip3
-      ansible.builtin.include_tasks: tasks/pip3_install.yml
 
     - name: Install docker
       ansible.builtin.include_tasks: tasks/docker_install.yml
@@ -50,3 +53,30 @@
 
     - name: Install vscode
       ansible.builtin.include_tasks: tasks/vscode_install.yml
+
+    - name: Install chrome
+      ansible.builtin.include_tasks: tasks/chrome_install.yml
+
+    - name: Install dotnet
+      ansible.builtin.include_tasks: tasks/dotnet_install.yml
+    
+    - name: Install general (spotify etc.)
+      ansible.builtin.include_tasks: tasks/general_install.yml
+    
+    - name: Install nvm
+      ansible.builtin.include_tasks: tasks/nvm_install.yml
+
+    - name: Install gnome extras
+      ansible.builtin.include_tasks: tasks/gnome_extras_install.yml
+
+    - name: Install java
+      ansible.builtin.include_tasks: tasks/java_install.yml
+
+    - name: Install pnpm
+      ansible.builtin.include_tasks: tasks/pnpm_install.yml
+
+    - name: Install github cli
+      ansible.builtin.include_tasks: tasks/github_install.yml
+
+    - name: Install jetbrains toolbox
+      ansible.builtin.include_tasks: tasks/jetbrains_install.yml

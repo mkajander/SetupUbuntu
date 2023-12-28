@@ -3,12 +3,13 @@
   ansible.builtin.command: az --version
   register: azure_cli_installed
   ignore_errors: true
-  changed_when: false
+  changed_when: azure_cli_installed.rc != 0
 
 - name: Install Azure CLI
   ansible.builtin.shell:
-    curl: -sL https://aka.ms/InstallAzureCLIDeb | bash
+    cmd: curl -sL https://aka.ms/InstallAzureCLIDeb | bash
   when: azure_cli_installed.rc != 0
   args:
     executable: /bin/bash
   changed_when: azure_cli_installed.rc != 0
+  become: true

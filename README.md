@@ -31,6 +31,15 @@ ansible for this is a bit hacky so avoiding it
 chsh -s $(which zsh)
 ``
 
+Re-Login
+
+Add some aliases
+```bash
+echo 'alias copilot="gh copilot"' >> ~/.zshrc && source ~/.zshrc
+echo 'alias gcs="gh copilot suggest"' >> ~/.zshrc && source ~/.zshrc
+echo 'alias gce="gh copilot explain"' >> ~/.zshrc && source ~/.zshrc
+```
+
 Download latest Dockstation from https://dockstation.io/ and install it.  
 ``
 sudo dpkg -i dockstation*.deb
