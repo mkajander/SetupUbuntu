@@ -38,13 +38,14 @@
     cmd: curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
   when: not docker_gpg_key_file.stat.exists
   become: true
-  changed_when: docker_gpg_key_added.rc == 0 and not docker_gpg_key_file.stat.exists
+  changed_when: not docker_gpg_key_file.stat.exists
+  register: docker_gpg_key_added
 
 - name: Set permissions on Docker GPG key
   ansible.builtin.file:
     path: /etc/apt/keyrings/docker.gpg
     mode: a+r
-  when: not docker_gpg_key_file.stat.exists
+  when: not docker_gpg_key_file.stat.exists and docker_gpg_key_added is changed
   become: true
 
 - name: Add Docker repository
@@ -55,6 +56,7 @@
     state: present
     filename: docker
   become: true
+
 
 - name: Install Docker components
   ansible.builtin.apt:
