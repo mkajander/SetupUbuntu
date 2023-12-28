@@ -57,7 +57,6 @@
     filename: docker
   become: true
 
-
 - name: Install Docker components
   ansible.builtin.apt:
     name:
