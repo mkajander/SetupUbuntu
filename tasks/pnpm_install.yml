@@ -1,0 +1,16 @@
+---
+- name: Check if pnpm is already installed
+  ansible.builtin.command: pnpm -v
+  register: pnpm_installed
+  ignore_errors: true
+  changed_when: false
+
+- name: Install pnpm (Performant npm)
+  ansible.builtin.shell:
+    cmd: curl -fsSL https://get.pnpm.io/install.sh | sh -
+  args:
+    executable: /bin/sh
+  become_user: "{{ install_user }}"
+  register: pnpm_installed
+  changed_when: pnpm_installed.stdout != ''
+  when: pnpm_installed.rc != 0

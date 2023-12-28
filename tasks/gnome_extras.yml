@@ -1,0 +1,11 @@
+---
+- name: Install gnome-stuff
+  ansible.builtin.apt:
+    name:
+      - gnome-tweaks
+      - gnome-shell-extensions
+      - chrome-gnome-shell
+    state: present
+  register: gnome_stuff_installed
+  become: true
+  changed_when: gnome_stuff_installed is changed

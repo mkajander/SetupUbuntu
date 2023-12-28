@@ -1,0 +1,47 @@
+---
+- name: Check if kubectl is already installed
+  ansible.builtin.command: which kubectl
+  register: kubectl_installed
+  ignore_errors: true
+  changed_when: false
+
+- name: Determine kubectl stable version
+  ansible.builtin.uri:
+    url: https://dl.k8s.io/release/stable.txt
+    return_content: true
+  register: k8s_stable_version
+  changed_when: false
+  when: kubectl_installed.rc != 0
+
+- name: Download kubectl binary
+  ansible.builtin.get_url:
+    url: https://dl.k8s.io/release/{{ k8s_stable_version.content | trim }}/bin/linux/{{ ansible_architecture }}/kubectl
+    dest: /tmp/kubectl
+    mode: "0755"
+  when: kubectl_installed.rc != 0
+
+- name: Download kubectl checksum
+  ansible.builtin.get_url:
+    url: https://dl.k8s.io/release/{{ k8s_stable_version.content | trim }}/bin/linux/{{ ansible_architecture }}/kubectl.sha256
+    dest: /tmp/kubectl.sha256
+    mode: "0644"
+  when: kubectl_installed.rc != 0
+
+- name: Verify kubectl binary
+  ansible.builtin.shell:
+    cmd: echo "$(cat /tmp/kubectl.sha256)  /tmp/kubectl" | sha256sum --check
+    executable: /bin/bash
+  register: checksum_result
+  failed_when: "'OK' not in checksum_result.stdout"
+  when: kubectl_installed.rc != 0
+  changed_when: false
+
+- name: Install kubectl
+  ansible.builtin.copy:
+    src: /tmp/kubectl
+    dest: /usr/local/bin/kubectl
+    owner: root
+    group: root
+    mode: "0755"
+  become: true
+  when: kubectl_installed.rc != 0

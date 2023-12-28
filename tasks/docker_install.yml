@@ -1,3 +1,4 @@
+---
 - name: Uninstall conflicting packages for docker
   ansible.builtin.apt:
     name:
@@ -18,12 +19,11 @@
   register: keyrings_dir
   become: true
 
-
 - name: Create /etc/apt/keyrings directory
   ansible.builtin.file:
     path: /etc/apt/keyrings
     state: directory
-    mode: '0755'
+    mode: "0755"
   when: not keyrings_dir.stat.exists
   become: true
 
@@ -40,17 +40,18 @@
   become: true
   changed_when: docker_gpg_key_added.rc == 0 and not docker_gpg_key_file.stat.exists
 
-
 - name: Set permissions on Docker GPG key
   ansible.builtin.file:
     path: /etc/apt/keyrings/docker.gpg
-    mode: 'a+r'
+    mode: a+r
   when: not docker_gpg_key_file.stat.exists
   become: true
 
 - name: Add Docker repository
   ansible.builtin.apt_repository:
-    repo: deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable
+    repo: >
+      deb [arch={{ ansible_architecture }} signed-by=/etc/apt/keyrings/docker.gpg]
+      https://download.docker.com/linux/ubuntu {{ ansible_lsb.codename }} stable
     state: present
     filename: docker
   become: true
@@ -64,7 +65,7 @@
       - docker-buildx-plugin
       - docker-compose-plugin
     state: present
-    update_cache: yes
+    update_cache: true
   become: true
   register: docker_installed
 
@@ -78,13 +79,13 @@
   ansible.builtin.user:
     name: "{{ install_user }}"
     groups: docker
-    append: yes
+    append: true
   become: true
 
 - name: Start Docker service
   ansible.builtin.service:
     name: docker
     state: started
-    enabled: yes
+    enabled: true
   become: true
   when: docker_installed is changed

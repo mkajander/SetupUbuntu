@@ -1,0 +1,25 @@
+---
+- name: Check if Minikube is already installed
+  ansible.builtin.command: which minikube
+  register: minikube_installed
+  ignore_errors: true
+  changed_when: false
+
+- name: Determine Minikube download URL
+  ansible.builtin.set_fact:
+    minikube_url: https://storage.googleapis.com/minikube/releases/latest/minikube-linux-{{ ansible_architecture }}
+
+- name: Download Minikube binary
+  ansible.builtin.get_url:
+    url: "{{ minikube_url }}"
+    dest: /tmp/minikube
+    mode: "0755"
+  when: minikube_installed.rc != 0
+
+- name: Install Minikube
+  ansible.builtin.command:
+    cmd: install /tmp/minikube /usr/local/bin/minikube
+  become: true
+  register: minikube_installed
+  when: minikube_installed.rc != 0
+  changed_when: minikube_installed.rc == 0

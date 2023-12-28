@@ -1,0 +1,30 @@
+---
+- name: Check if JetBrains Toolbox is installed
+  ansible.builtin.stat:
+    path: /opt/jetbrains-toolbox
+  register: toolbox_installed
+  become: true
+
+- name: Get install JetBrains Toolbox script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/nagygergo/jetbrains-toolbox-install/master/jetbrains-toolbox.sh
+    dest: /tmp/jetbrains-toolbox.sh
+    mode: "0755"
+  when: not toolbox_installed.stat.exists
+  become: true
+
+- name: Install JetBrains Toolbox from the script
+  ansible.builtin.command:
+    cmd: /tmp/jetbrains-toolbox.sh
+    creates: /opt/jetbrains-toolbox
+  when: not toolbox_installed.stat.exists
+  become: true
+
+- name: Start JetBrains Toolbox
+  ansible.builtin.command:
+    cmd: /opt/jetbrains-toolbox/jetbrains-toolbox
+    creates: /home/{{ install_user }}/.local/share/JetBrains/Toolbox
+  become: true
+  become_user: "{{ install_user }}"
+  register: jetbrains_toolbox_started
+  changed_when: jetbrains_toolbox_started is changed

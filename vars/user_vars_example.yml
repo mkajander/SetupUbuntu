@@ -1,4 +1,4 @@
 ---
-install_user: "myuser"
-git_user: "my name"
-git_email: "my email"
+install_user: myuser
+git_user: my name
+git_email: my email
