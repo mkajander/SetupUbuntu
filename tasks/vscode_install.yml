@@ -3,5 +3,6 @@
   community.general.snap:
     name: code
     state: present
+    classic: true
   register: vscode_installed
   become: true

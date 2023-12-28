@@ -17,3 +17,10 @@
     state: present
     update_cache: true
   become: true
+
+- name: Install wl-clipboard
+  ansible.builtin.apt:
+    name: wl-clipboard
+    state: present
+    update_cache: true
+  become: true
