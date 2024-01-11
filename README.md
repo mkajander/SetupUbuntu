@@ -48,3 +48,13 @@ Since that will probably error out use
 ``
 sudo apt-get install -f
 ``  
+
+Create ssh key for github  
+```bash
+ssh-keygen
+cat ~/.ssh/id_rsa.pub
+```
+Add key to github
+```bash
+gh auth login
+```

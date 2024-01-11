@@ -8,6 +8,7 @@
       - curl
       - apt-transport-https
       - lsb-release
+      - libfuse2
     state: present
     update_cache: true
   become: true
