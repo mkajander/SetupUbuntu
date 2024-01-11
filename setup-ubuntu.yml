@@ -77,6 +77,9 @@
 
     - name: Install github cli
       ansible.builtin.include_tasks: tasks/github_install.yml
-
+      
+    - name: Install 1password
+      ansible.builtin.include_tasks: tasks/1password_install.yml
+      
     - name: Install jetbrains toolbox
       ansible.builtin.include_tasks: tasks/jetbrains_install.yml
